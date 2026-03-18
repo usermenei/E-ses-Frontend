@@ -19,7 +19,7 @@ export default function BookingList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  console.log("🔍 Session ที่หน้าเว็บได้รับ:", session?.user);
+  //console.log("🔍 Session ที่หน้าเว็บได้รับ:", session?.user);
   // ✅ เช็คว่าเป็น Admin หรือไม่ (อ้างอิงจากการดึง role ออกมาจาก session)
   const isAdmin = (session?.user as any)?.role === "admin";
 

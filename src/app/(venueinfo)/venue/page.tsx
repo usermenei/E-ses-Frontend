@@ -2,10 +2,12 @@ import getCoworkingSpaces from "@/libs/getCoworkingSpaces";
 import VenueCatalog from "@/components/VenueCatalog";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/authOptions";
+import Link from "next/link"; // ✅ อย่าลืม Import Link
 
 export default async function VenuePage() {
   const session = await getServerSession(authOptions);
   const token = (session?.user as any)?.token;
+  const role = (session?.user as any)?.role; // ✅ ดึง role ออกมาเช็ค
 
   let spaces = null;
 
@@ -26,6 +28,7 @@ export default async function VenuePage() {
           padding: "40px 24px",
           textAlign: "center",
           color: "#fff",
+          position: "relative", // ✅ เพิ่ม position สำหรับจัดวางปุ่ม
         }}
       >
         <h1
@@ -41,6 +44,27 @@ export default async function VenuePage() {
         <p style={{ fontSize: "14px", opacity: 0.8 }}>
           Choose a space that fits your work style
         </p>
+
+        {/* ✅ ปุ่มสร้าง Space (เห็นเฉพาะ Admin) */}
+        {role === "admin" && (
+          <div style={{ marginTop: "20px" }}>
+            <Link
+              href="/venue/create"
+              style={{
+                background: "#fff",
+                color: "#0891b2",
+                padding: "10px 20px",
+                borderRadius: "30px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "14px",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              + Create New Space
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* CONTENT */}
