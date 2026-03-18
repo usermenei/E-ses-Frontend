@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getReservations, { Reservation } from "@/libs/getReservations";
 import deleteReservation from "@/libs/deleteReservation";
+import confirmReservation from "@/libs/confirmReservation"; // ✅ นำเข้าไฟล์ที่เพิ่งสร้าง
 import Link from "next/link";
 
 const statusColors: Record<string, { bg: string; text: string; border: string }> = {
@@ -17,6 +18,10 @@ export default function BookingList() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  console.log("🔍 Session ที่หน้าเว็บได้รับ:", session?.user);
+  // ✅ เช็คว่าเป็น Admin หรือไม่ (อ้างอิงจากการดึง role ออกมาจาก session)
+  const isAdmin = (session?.user as any)?.role === "admin";
 
   const fetchReservations = async () => {
     if (!session?.user?.token) { setLoading(false); return; }
@@ -43,13 +48,30 @@ export default function BookingList() {
     }
   };
 
+  // ✅ ฟังก์ชันสำหรับ Admin กดยืนยัน
+  const handleApprove = async (id: string) => {
+    if (!session?.user?.token) return;
+    if (!confirm("Approve this reservation?")) return;
+    
+    try {
+      await confirmReservation(id, session.user.token as string);
+      
+      // อัปเดตสถานะใน State ทันทีโดยไม่ต้องโหลดหน้าใหม่
+      setReservations((prev) => 
+        prev.map((r) => r._id === id ? { ...r, status: "success" } : r)
+      );
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to approve.");
+    }
+  };
+
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", width: "100%" }}>
       <h2 style={{ fontSize: "26px", fontWeight: 800, color: "#111", marginBottom: "4px", fontFamily: "'Playfair Display', serif" }}>
-        My Reservations
+        {isAdmin ? "All Reservations (Admin)" : "My Reservations"}
       </h2>
       <p style={{ fontSize: "13px", color: "#9ca3af", marginBottom: "24px" }}>
-        {reservations.length} upcoming {reservations.length === 1 ? "reservation" : "reservations"}
+        {reservations.length} {isAdmin ? "total" : "upcoming"} {reservations.length === 1 ? "reservation" : "reservations"}
       </p>
 
       {!session && (
@@ -89,42 +111,56 @@ export default function BookingList() {
         const sc = statusColors[r.status] ?? statusColors.pending;
 
         return (
-          <div key={r._id} style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "16px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div key={r._id} style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "16px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1 }}>
               {/* Space picture or fallback */}
               <div style={{ width: "52px", height: "52px", borderRadius: "12px", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", flexShrink: 0, overflow: "hidden" }}>
                 {space?.picture
                   ? <img src={space.picture} alt={space.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : "🏢"}
               </div>
-              <div>
-                <p style={{ fontSize: "14px", fontWeight: 800, color: "#111", marginBottom: "2px" }}>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <p style={{ fontSize: "14px", fontWeight: 800, color: "#111", margin: 0 }}>
                   {space?.name ?? "Unknown Space"}
                 </p>
-                <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                <p style={{ fontSize: "12px", color: "#6b7280", margin: 0 }}>
                   {space?.district}, {space?.province}
                 </p>
-                <p style={{ fontSize: "12px", fontWeight: 700, color: "#0891b2", marginBottom: "4px" }}>
-                  📅 {dateStr} at {timeStr}
-                </p>
-                {space?.caption && (
-                  <p style={{ fontSize: "11px", color: "#9ca3af", fontStyle: "italic" }}>{space.caption}</p>
-                )}
-                {/* Status badge */}
-                <span style={{ fontSize: "11px", fontWeight: 700, background: sc.bg, color: sc.text, border: `1px solid ${sc.border}`, padding: "2px 8px", borderRadius: "20px" }}>
-                  {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <p style={{ fontSize: "12px", fontWeight: 700, color: "#0891b2", margin: 0 }}>
+                    📅 {dateStr} at {timeStr}
+                  </p>
+                  {/* Status badge */}
+                  <span style={{ fontSize: "11px", fontWeight: 700, background: sc.bg, color: sc.text, border: `1px solid ${sc.border}`, padding: "2px 8px", borderRadius: "20px" }}>
+                    {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {r.status !== "cancelled" && (
-              <button
-                onClick={() => handleCancel(r._id)}
-                style={{ fontSize: "12px", fontWeight: 700, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", flexShrink: 0, fontFamily: "'Nunito', sans-serif" }}
-              >
-                Cancel
-              </button>
-            )}
+            {/* ส่วนของปุ่ม (Approve & Cancel) */}
+            <div style={{ display: "flex", gap: "8px" }}>
+              {/* ✅ ปุ่ม Approve จะโชว์ก็ต่อเมื่อเป็น Admin และสถานะยัง pending อยู่ */}
+              {isAdmin && r.status === "pending" && (
+                <button
+                  onClick={() => handleApprove(r._id)}
+                  style={{ fontSize: "12px", fontWeight: 700, color: "#166534", background: "#f0fdf4", border: "1px solid #86efac", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}
+                >
+                  Approve
+                </button>
+              )}
+
+              {/* ปุ่ม Cancel ซ่อนเมื่อถูกยกเลิกไปแล้ว หรือเมื่อ approve แล้วก็อาจจะยัง cancel ได้ (ตามโค้ดเดิมของคุณ) */}
+              {r.status !== "cancelled" && (
+                <button
+                  onClick={() => handleCancel(r._id)}
+                  style={{ fontSize: "12px", fontWeight: 700, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         );
       })}

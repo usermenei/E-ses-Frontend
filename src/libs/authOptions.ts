@@ -24,7 +24,6 @@ export const authOptions: AuthOptions = {
 
           console.log("LOGIN RESPONSE:", res);
 
-          // ❗ expect: { success, token }
           if (!res || !res.token) return null;
 
           // ✅ decode JWT
@@ -33,8 +32,9 @@ export const authOptions: AuthOptions = {
           return {
             id: decoded.id,
             email: credentials.email,
-            name: decoded.name || "User", // ✅ FIXED
-            token: res.token, // ✅ FIXED
+            name: decoded.name || "User", 
+            token: res.token, 
+            role: decoded.role || "user", // ✅ ดึง role จาก token ของ backend
           };
         } catch (err) {
           console.error("Authorize error:", err);
@@ -53,8 +53,9 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = (user as any).name;   // ✅ FIXED
-        token.token = (user as any).token; // ✅ FIXED
+        token.name = (user as any).name;   
+        token.token = (user as any).token; 
+        token.role = (user as any).role;   // ✅ ยัด role ใส่ token
       }
       return token;
     },
@@ -63,8 +64,9 @@ export const authOptions: AuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.name = token.name as string; // ✅ FIXED
-        (session.user as any).token = token.token; // ✅ FIXED
+        session.user.name = token.name as string; 
+        (session.user as any).token = token.token; 
+        (session.user as any).role = token.role;   // ✅ ส่ง role ไปให้หน้า BookingList ใช้
       }
       return session;
     },
