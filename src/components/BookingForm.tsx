@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useSession } from "next-auth/react";
 import createReservation from "@/libs/createReservation";
 import getCoworkingSpaces, {
   CoworkingSpaceItem,
 } from "@/libs/getCoworkingSpaces";
 
+// ✅ นำเข้า DatePicker และ CSS ของมัน
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 export default function BookingForm() {
   const { data: session } = useSession();
 
   const [spaces, setSpaces] = useState<CoworkingSpaceItem[]>([]);
   const [spaceId, setSpaceId] = useState("");
-  const [apptDate, setApptDate] = useState("");
+  // ✅ เปลี่ยนจาก string ("") เป็น Date object (null)
+  const [apptDate, setApptDate] = useState<Date | null>(null);
   const [apptTime, setApptTime] = useState("09:00");
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -22,12 +27,12 @@ export default function BookingForm() {
   useEffect(() => {
     const fetchSpaces = async () => {
       try {
-        const token = (session?.user as any)?.token; // ✅ FIX
+        const token = (session?.user as any)?.token; 
 
         if (!token) return;
 
         const json = await getCoworkingSpaces(token);
-        setSpaces(json.data); // ✅ IMPORTANT
+        setSpaces(json.data); 
       } catch (err) {
         console.error(err);
         setErrorMsg("Failed to load spaces.");
@@ -39,7 +44,7 @@ export default function BookingForm() {
 
   // ✅ SUBMIT BOOKING
   const handleSubmit = async () => {
-    const token = (session?.user as any)?.token; // ✅ FIX
+    const token = (session?.user as any)?.token; 
 
     if (!token) {
       setErrorMsg("You must be signed in to make a reservation.");
@@ -56,7 +61,13 @@ export default function BookingForm() {
       return;
     }
 
-    const isoDate = new Date(`${apptDate}T${apptTime}:00`).toISOString();
+    // ✅ แปลง Date object ให้เป็น String รูปแบบ YYYY-MM-DD เพื่อเอาไปประกอบกับเวลา
+    const yyyy = apptDate.getFullYear();
+    const mm = String(apptDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(apptDate.getDate()).padStart(2, "0");
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    const isoDate = new Date(`${formattedDate}T${apptTime}:00`).toISOString();
 
     setLoading(true);
     setErrorMsg("");
@@ -65,12 +76,12 @@ export default function BookingForm() {
       await createReservation(
         spaceId,
         { apptDate: isoDate },
-        token // ✅ FIX
+        token 
       );
 
       setSuccess(true);
       setSpaceId("");
-      setApptDate("");
+      setApptDate(null); // ✅ รีเซ็ตค่ากลับเป็น null
       setApptTime("09:00");
 
       setTimeout(() => setSuccess(false), 4000);
@@ -81,86 +92,191 @@ export default function BookingForm() {
     }
   };
 
+  // ✅ การตกแต่งใหม่ทั้งหมด (Premium styled objects)
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: "11px",
     fontWeight: 700,
     letterSpacing: "2px",
     textTransform: "uppercase",
-    color: "#9ca3af",
-    marginBottom: "6px",
+    color: "#6b7280",
+    marginBottom: "10px",
   };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    padding: "10px 14px",
-    fontSize: "14px",
+    padding: "12px 16px",
+    fontSize: "15px",
     border: "1.5px solid #e5e7eb",
-    borderRadius: "10px",
+    borderRadius: "12px",
     outline: "none",
     fontFamily: "'Nunito', sans-serif",
     color: "#111",
     background: "#fff",
+    boxSizing: "border-box",
+    transition: "all 0.2s ease-in-out",
   };
 
-  return (
-    <div style={{ maxWidth: "460px", margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: 800 }}>
-          Reserve a Space
-        </h1>
-        <p style={{ fontSize: "13px", color: "#9ca3af" }}>
-          {session?.user?.name
-            ? `Booking as ${session.user.name}`
-            : "Sign in to make a reservation"}
-        </p>
-      </div>
+  const inputWrapperStyle: React.CSSProperties = {
+    marginBottom: "20px",
+  };
 
-      <div style={{ background: "#fff", padding: "28px", borderRadius: "20px" }}>
-        {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
-        {success && (
-          <p style={{ color: "green" }}>
-            Reservation successful 🎉
+  const cardStyle: React.CSSProperties = {
+    maxWidth: "460px",
+    margin: "0 auto",
+    background: "#fff",
+    padding: "36px",
+    borderRadius: "24px",
+    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+  };
+
+  // ✅ สร้าง Custom Input เพื่อใส่ Icon และ Shadow
+  const CustomDatePickerInput = forwardRef(({ value, onClick, ...props }: any, ref: any) => (
+    <div style={{ position: "relative" }}>
+      <input
+        {...props}
+        value={value}
+        onClick={onClick}
+        ref={ref}
+        style={{ ...inputStyle, paddingLeft: "42px" }}
+      />
+      <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
+        {/* SVG Icon สำหรับ Calendar */}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zM14.25 15h.008v.008H14.25V15zm0 2.25h.008v.008H14.25v-.008zM16.5 15h.008v.008H16.5V15zm0 2.25h.008v.008H16.5v-.008z" />
+        </svg>
+      </span>
+    </div>
+  ));
+
+  CustomDatePickerInput.displayName = "CustomDatePickerInput";
+
+  // ✅ CSS สำหรับตกแต่ง DatePicker Picker Popover
+  const datePickerGlobalStyles = `
+    .react-datepicker-wrapper {
+      width: 100%;
+    }
+    .react-datepicker {
+      font-family: 'Nunito', sans-serif;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    .react-datepicker__header {
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    .react-datepicker__day--selected {
+      background-color: #0891b2;
+      border-radius: 6px;
+    }
+    .react-datepicker__day--selected:hover {
+      background-color: #0e7490;
+    }
+    .react-datepicker__day--today {
+      color: #0891b2;
+      font-weight: 700;
+    }
+    .react-datepicker__day--today:after {
+      display: none;
+    }
+  `;
+
+  return (
+    <div style={{ padding: "40px 20px", background: "#f9fafb", minHeight: "100vh" }}>
+      {/* เพิ่ม Style เพื่อตกแต่ง DatePicker Popover */}
+      <style>{datePickerGlobalStyles}</style>
+      <style>{`
+        input:focus {
+          border-color: #0891b2 !important;
+          box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
+        }
+      `}</style>
+
+      <div style={cardStyle}>
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#111", letterSpacing: "-0.5px" }}>
+            Reserve a Space
+          </h1>
+          <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>
+            {session?.user?.name
+              ? `Booking as ${session.user.name}`
+              : "Sign in to make a reservation"}
           </p>
+        </div>
+
+        {/* FEEDBACK */}
+        {errorMsg && (
+          <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: "10px", marginBottom: "18px", fontSize: "14px", fontWeight: 600 }}>
+            {errorMsg}
+          </div>
+        )}
+        {success && (
+          <div style={{ background: "#d1fae5", color: "#16a34a", padding: "12px 16px", borderRadius: "10px", marginBottom: "18px", fontSize: "14px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Reservation successful 🎉
+          </div>
         )}
 
         {/* SELECT SPACE */}
-        <div style={{ marginBottom: "18px" }}>
+        <div style={inputWrapperStyle}>
           <label style={labelStyle}>Coworking Space</label>
-          <select
-            value={spaceId}
-            onChange={(e) => setSpaceId(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="">-- Select a space --</option>
-            {spaces.map((s) => (
-              <option key={s._id} value={s._id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <div style={{ position: "relative" }}>
+            <select
+              value={spaceId}
+              onChange={(e) => setSpaceId(e.target.value)}
+              style={{ ...inputStyle, paddingRight: "40px", appearance: "none" }}
+            >
+              <option value="">-- Select a space --</option>
+              {spaces.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", pointerEvents: "none" }}>
+              {/* SVG Icon สำหรับ Dropdown */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </span>
+          </div>
         </div>
 
-        {/* DATE */}
-        <div style={{ marginBottom: "18px" }}>
+        {/* ✅ DATE PICKER (ตกแต่งครบ) */}
+        <div style={inputWrapperStyle}>
           <label style={labelStyle}>Date</label>
-          <input
-            type="date"
-            value={apptDate}
-            onChange={(e) => setApptDate(e.target.value)}
-            style={inputStyle}
+          <DatePicker
+            selected={apptDate}
+            onChange={(date: Date | null) => setApptDate(date)}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Select a date"
+            minDate={new Date()}
+            customInput={<CustomDatePickerInput />} // ✅ ใช้ Custom Input ที่มี Icon
           />
         </div>
 
         {/* TIME */}
-        <div style={{ marginBottom: "18px" }}>
+        <div style={inputWrapperStyle}>
           <label style={labelStyle}>Time</label>
-          <input
-            type="time"
-            value={apptTime}
-            onChange={(e) => setApptTime(e.target.value)}
-            style={inputStyle}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type="time"
+              value={apptTime}
+              onChange={(e) => setApptTime(e.target.value)}
+              style={{ ...inputStyle, paddingLeft: "42px" }}
+            />
+            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
+              {/* SVG Icon สำหรับ Clock */}
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+          </div>
         </div>
 
         {/* SUBMIT */}
@@ -171,11 +287,20 @@ export default function BookingForm() {
             width: "100%",
             background: "#0891b2",
             color: "#fff",
-            padding: "12px",
-            borderRadius: "10px",
+            padding: "14px",
+            borderRadius: "12px",
             fontWeight: 700,
             marginTop: "10px",
+            border: "none",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1,
+            transition: "all 0.3s ease",
+            fontSize: "16px",
+            letterSpacing: "0.5px",
+            boxShadow: loading ? "none" : "0 4px 6px -1px rgba(8, 145, 178, 0.4)",
           }}
+          onMouseOver={(e) => (e.currentTarget.style.background = "#0e7490")}
+          onMouseOut={(e) => (e.currentTarget.style.background = "#0891b2")}
         >
           {loading ? "Loading..." : "Confirm Reservation"}
         </button>
