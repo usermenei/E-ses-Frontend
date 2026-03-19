@@ -70,15 +70,18 @@ export default function ReservationCard({
           <button onClick={() => onEdit(r)} className={styles.btnEdit}>Edit</button>
         )}
 
+        {/* ปุ่ม Approve โชว์เฉพาะ Admin และสถานะต้อง pending */}
         {isAdmin && r.status === "pending" && (
           <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>Approve</button>
         )}
 
-        {r.status !== "cancelled" && (
+        {/* ✅ แก้แล้ว: ปุ่ม Cancel โชว์เฉพาะตอน pending เท่านั้น */}
+        {r.status === "pending" && (
           <button onClick={() => onCancel(r._id)} className={styles.btnCancel}>Cancel</button>
         )}
 
-        {(isAdmin || r.status === "cancelled") && (
+        {/* ✅ แก้แล้ว: ปุ่ม Delete โชว์ให้ Admin, หรือคิวที่ cancelled แล้ว, หรือคิวที่ success แล้ว */}
+        {(isAdmin || r.status === "cancelled" || r.status === "success") && (
            <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>Delete</button>
         )}
       </div>

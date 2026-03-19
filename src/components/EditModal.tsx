@@ -177,14 +177,14 @@ export default function EditModal({ reservation, isAdmin, token, onClose, onSucc
         
         {/* DATE PICKER */}
         <div style={{ marginBottom: "20px" }}>
-          <label style={labelStyle}>Date</label>
-          <DatePicker 
+        <label style={labelStyle}>Date</label>
+        <DatePicker 
             selected={apptDate} 
-            onChange={(date) => setApptDate(date)} 
+            onChange={(date: Date | null) => setApptDate(date)} // ✅ เติม : Date | null ตรงนี้
             dateFormat="yyyy-MM-dd" 
-            minDate={new Date()} // ✅ กันไม่ให้จิ้มเลือกวันในอดีตได้
+            minDate={new Date()}
             customInput={<CustomDatePickerInput />}
-          />
+        />
         </div>
 
         <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
@@ -229,26 +229,28 @@ export default function EditModal({ reservation, isAdmin, token, onClose, onSucc
 
         {/* STATUS */}
         {isAdmin && (
-          <div style={{ marginBottom: "32px" }}>
+        <div style={{ marginBottom: "32px" }}>
             <label style={labelStyle}>Status</label>
             <div style={{ position: "relative" }}>
-              <select 
-                value={status} 
-                onChange={(e) => setStatus(e.target.value)} 
-                className="modal-select"
-                style={{ ...inputStyle, paddingRight: "40px", appearance: "none" }}
-              >
+            <select 
+            value={status} 
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => 
+                setStatus(e.target.value as "pending" | "success" | "cancelled") // ✅ เติม as ... ตรงนี้ครับ
+            } 
+            className="modal-select"
+            style={{ ...inputStyle, paddingRight: "40px", appearance: "none" }}
+            >
                 <option value="pending">Pending</option>
                 <option value="success">Success</option>
                 <option value="cancelled">Cancelled</option>
-              </select>
-              <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", pointerEvents: "none" }}>
+            </select>
+            <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", pointerEvents: "none" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
-              </span>
+            </span>
             </div>
-          </div>
+        </div>
         )}
 
         {/* BUTTONS */}

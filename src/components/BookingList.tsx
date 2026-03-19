@@ -22,7 +22,6 @@ export default function BookingList() {
   const [sortBy, setSortBy] = useState("date-asc"); 
   const [statusFilter, setStatusFilter] = useState("all"); 
   
-  // State สำหรับเปิด/ปิดหน้าต่าง Edit Modal
   const [editingRes, setEditingRes] = useState<Reservation | null>(null);
   
   const isAdmin = (session?.user as any)?.role === "admin";
@@ -54,9 +53,21 @@ export default function BookingList() {
     }
   };
 
+  // ✅ ปรับปรุง handleDelete ให้ข้อความ Confirm เหมาะสมกับสถานะและ Role
   const handleDelete = async (id: string) => {
     if (!session?.user?.token) return;
-    if (!confirm("Are you sure you want to PERMANENTLY DELETE this record?")) return;
+
+    // หาคิวที่กำลังจะลบ เพื่อดู status
+    const targetRes = reservations.find(r => r._id === id);
+    const isUserClearingHistory = !isAdmin && targetRes?.status === "success";
+
+    // กำหนดข้อความแจ้งเตือน
+    const confirmMsg = isUserClearingHistory
+      ? "Do you want to remove this completed reservation from your history?" // ข้อความสำหรับ User ทั่วไป
+      : "Are you sure you want to PERMANENTLY DELETE this record?"; // ข้อความเตือนแรงๆ สำหรับ Admin หรือเคสอื่นๆ
+
+    if (!confirm(confirmMsg)) return;
+    
     try {
       await deleteReservation(id, session.user.token as string);
       setReservations((prev) => prev.filter((r) => r._id !== id));
@@ -78,20 +89,18 @@ export default function BookingList() {
     }
   };
 
-  // เมื่อแก้ข้อมูลเสร็จแล้ว ปิด Modal และโหลดข้อมูลใหม่
   const handleEditSuccess = () => {
     setEditingRes(null);
     fetchReservations(); 
   };
 
+  // ... (ส่วนโค้ดฟิลเตอร์ เรียงลำดับ เหมือนเดิมเป๊ะครับ)
   const filteredReservations = reservations.filter((r) => {
     const userName = (r as any).user?.name?.toLowerCase() || "";
     const spaceName = r.coworkingSpace?.name?.toLowerCase() || "";
-
     const matchUser = !isAdmin || searchTerm === "" || userName.includes(searchTerm.toLowerCase());
     const matchSpace = spaceSearchTerm === "" || spaceName.includes(spaceSearchTerm.toLowerCase());
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
-
     return matchUser && matchSpace && matchStatus;
   });
 
@@ -113,6 +122,7 @@ export default function BookingList() {
 
   return (
     <div className={styles.container}>
+      {/* ... (UI ท่อนบนเหมือนเดิมครับ ไม่มีการแก้ไข) ... */}
       <h2 className={styles.title}>
         {isAdmin ? "All Reservations" : "My Reservations"}
       </h2>
@@ -176,11 +186,10 @@ export default function BookingList() {
           onApprove={handleApprove}
           onCancel={handleCancelStatus}
           onDelete={handleDelete}
-          onEdit={(res) => setEditingRes(res)} // เปิดหน้าต่างแก้
+          onEdit={(res) => setEditingRes(res)} 
         />
       ))}
 
-      {/* ถ้ามีการกดแก้ไข ให้เปิด Modal ขึ้นมาแสดง */}
       {editingRes && (
         <EditModal 
           reservation={editingRes} 
