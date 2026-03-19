@@ -3,13 +3,13 @@
 import { Reservation } from "@/libs/getReservations";
 import styles from "./BookingList.module.css";
 
-// ✅ 1. เพิ่ม onDelete เข้ามาใน Props
 interface ReservationCardProps {
   reservation: Reservation;
   isAdmin: boolean;
   onApprove: (id: string) => void;
   onCancel: (id: string) => void;
-  onDelete: (id: string) => void; 
+  onDelete: (id: string) => void;
+  onEdit: (res: Reservation) => void;
 }
 
 export default function ReservationCard({
@@ -17,7 +17,8 @@ export default function ReservationCard({
   isAdmin,
   onApprove,
   onCancel,
-  onDelete, // ✅ รับ Props
+  onDelete,
+  onEdit,
 }: ReservationCardProps) {
   const space = r.coworkingSpace;
 
@@ -64,16 +65,19 @@ export default function ReservationCard({
       </div>
 
       <div className={styles.actionsContainer}>
+        {/* ปุ่ม Edit โชว์ให้ Admin หรือ User เฉพาะสถานะ pending */}
+        {(isAdmin || r.status === "pending") && (
+          <button onClick={() => onEdit(r)} className={styles.btnEdit}>Edit</button>
+        )}
+
         {isAdmin && r.status === "pending" && (
           <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>Approve</button>
         )}
 
-        {/* ✅ ปุ่ม Cancel จะโชว์เฉพาะตอนที่ยังไม่โดน Cancel */}
         {r.status !== "cancelled" && (
           <button onClick={() => onCancel(r._id)} className={styles.btnCancel}>Cancel</button>
         )}
 
-        {/* ✅ ปุ่ม Delete (ลบทิ้งถาวร) โชว์ให้แอดมิน หรือโชว์เวลาที่สถานะถูก Cancelled ไปแล้วเผื่อผู้ใช้จะล้างประวัติ */}
         {(isAdmin || r.status === "cancelled") && (
            <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>Delete</button>
         )}

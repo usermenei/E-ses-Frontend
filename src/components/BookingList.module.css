@@ -276,3 +276,115 @@
 .btnDelete:hover {
     background: #e5e7eb;
 }
+
+/* --- ปุ่ม Edit --- */
+.btnEdit {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0369a1;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btnEdit:hover {
+    background: #bae6fd;
+}
+
+/* --- Modal Popup --- */
+.modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modalContent {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.modalHeader {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    color: #111;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btnSave {
+    flex: 1;
+    background: #0891b2;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btnCancelModal {
+    flex: 1;
+    background: #f3f4f6;
+    color: #4b5563;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* --- ส่วนเพิ่มเติมใน BookingList.module.css --- */
+
+/* กำหนดสไตล์พื้นฐานให้ label ภายในโมดอล */
+.modalContent label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151; /* สีเทาเข้ม */
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+/* ปรับปรุงสไตล์ input และ select ภายในโมดอล */
+.modalContent input,
+.modalContent select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  color: #111; /* ✅ บังคับให้ตัวอักษรเป็นสีดำเข้ม */
+  background-color: #ffffff; /* ✅ บังคับพื้นหลังเป็นสีขาว */
+  outline-color: #0891b2;
+  box-sizing: border-box;
+  margin-bottom: 16px; /* ระยะห่างด้านล่าง */
+  transition: border-color 0.2s;
+}
+
+/* แก้ไขสี placeholder ของ input */
+.modalContent input::placeholder {
+  color: #9ca3af; /* สีเทาอ่อน */
+}
+
+/* เพิ่ม Transition เมื่อ focus */
+.modalContent input:focus,
+.modalContent select:focus {
+  border-color: #0891b2;
+}
