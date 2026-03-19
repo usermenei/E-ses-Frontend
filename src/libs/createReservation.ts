@@ -2,6 +2,7 @@ const BASE = "http://localhost:5000/api/v1";
 
 export interface CreateReservationBody {
   apptDate: string; // ISO date-time string e.g. "2026-03-01T10:00:00.000Z"
+  apptEndDate: string; // ✅ เพิ่มเวลาสิ้นสุด
 }
 
 export interface CreateReservationResponse {
@@ -9,6 +10,7 @@ export interface CreateReservationResponse {
   data: {
     _id: string;
     apptDate: string;
+    apptEndDate: string; // ✅ เพิ่มเวลาสิ้นสุด
     user: string;
     coworkingSpace: string;
     status: "pending" | "success" | "cancelled";

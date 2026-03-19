@@ -7,7 +7,6 @@ import getCoworkingSpaces, {
   CoworkingSpaceItem,
 } from "@/libs/getCoworkingSpaces";
 
-// ✅ นำเข้า DatePicker และ CSS ของมัน
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -16,19 +15,20 @@ export default function BookingForm() {
 
   const [spaces, setSpaces] = useState<CoworkingSpaceItem[]>([]);
   const [spaceId, setSpaceId] = useState("");
-  // ✅ เปลี่ยนจาก string ("") เป็น Date object (null)
   const [apptDate, setApptDate] = useState<Date | null>(null);
+  
+  // ✅ แยก State สำหรับเวลาเริ่ม และ เวลาสิ้นสุด
   const [apptTime, setApptTime] = useState("09:00");
+  const [apptEndTime, setApptEndTime] = useState("10:00"); 
+
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ FETCH COWORKING SPACES
   useEffect(() => {
     const fetchSpaces = async () => {
       try {
         const token = (session?.user as any)?.token; 
-
         if (!token) return;
 
         const json = await getCoworkingSpaces(token);
@@ -42,7 +42,6 @@ export default function BookingForm() {
     fetchSpaces();
   }, [session]);
 
-  // ✅ SUBMIT BOOKING
   const handleSubmit = async () => {
     const token = (session?.user as any)?.token; 
 
@@ -61,13 +60,20 @@ export default function BookingForm() {
       return;
     }
 
-    // ✅ แปลง Date object ให้เป็น String รูปแบบ YYYY-MM-DD เพื่อเอาไปประกอบกับเวลา
     const yyyy = apptDate.getFullYear();
     const mm = String(apptDate.getMonth() + 1).padStart(2, "0");
     const dd = String(apptDate.getDate()).padStart(2, "0");
     const formattedDate = `${yyyy}-${mm}-${dd}`;
 
+    // ✅ แปลงทั้ง Start Time และ End Time ให้เป็น ISO String
     const isoDate = new Date(`${formattedDate}T${apptTime}:00`).toISOString();
+    const isoEndDate = new Date(`${formattedDate}T${apptEndTime}:00`).toISOString();
+
+    // ✅ ตรวจสอบฝั่ง Frontend ก่อนส่งไป Backend
+    if (new Date(isoEndDate) <= new Date(isoDate)) {
+      setErrorMsg("End time must be after start time.");
+      return;
+    }
 
     setLoading(true);
     setErrorMsg("");
@@ -75,14 +81,18 @@ export default function BookingForm() {
     try {
       await createReservation(
         spaceId,
-        { apptDate: isoDate },
+        { 
+          apptDate: isoDate, 
+          apptEndDate: isoEndDate // ✅ ส่งเวลาสิ้นสุดไปด้วย
+        },
         token 
       );
 
       setSuccess(true);
       setSpaceId("");
-      setApptDate(null); // ✅ รีเซ็ตค่ากลับเป็น null
+      setApptDate(null);
       setApptTime("09:00");
+      setApptEndTime("10:00"); // รีเซ็ต
 
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
@@ -92,7 +102,7 @@ export default function BookingForm() {
     }
   };
 
-  // ✅ การตกแต่งใหม่ทั้งหมด (Premium styled objects)
+  // Styles
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: "11px",
@@ -130,7 +140,6 @@ export default function BookingForm() {
     boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
   };
 
-  // ✅ สร้าง Custom Input เพื่อใส่ Icon และ Shadow
   const CustomDatePickerInput = forwardRef(({ value, onClick, ...props }: any, ref: any) => (
     <div style={{ position: "relative" }}>
       <input
@@ -141,7 +150,6 @@ export default function BookingForm() {
         style={{ ...inputStyle, paddingLeft: "42px" }}
       />
       <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
-        {/* SVG Icon สำหรับ Calendar */}
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zM14.25 15h.008v.008H14.25V15zm0 2.25h.008v.008H14.25v-.008zM16.5 15h.008v.008H16.5V15zm0 2.25h.008v.008H16.5v-.008z" />
         </svg>
@@ -151,45 +159,21 @@ export default function BookingForm() {
 
   CustomDatePickerInput.displayName = "CustomDatePickerInput";
 
-  // ✅ CSS สำหรับตกแต่ง DatePicker Picker Popover
   const datePickerGlobalStyles = `
-    .react-datepicker-wrapper {
-      width: 100%;
-    }
-    .react-datepicker {
-      font-family: 'Nunito', sans-serif;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    }
-    .react-datepicker__header {
-      background-color: #f9fafb;
-      border-bottom: 1px solid #e5e7eb;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
-    .react-datepicker__day--selected {
-      background-color: #0891b2;
-      border-radius: 6px;
-    }
-    .react-datepicker__day--selected:hover {
-      background-color: #0e7490;
-    }
-    .react-datepicker__day--today {
-      color: #0891b2;
-      font-weight: 700;
-    }
-    .react-datepicker__day--today:after {
-      display: none;
-    }
+    .react-datepicker-wrapper { width: 100%; }
+    .react-datepicker { font-family: 'Nunito', sans-serif; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .react-datepicker__header { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+    .react-datepicker__day--selected { background-color: #0891b2; border-radius: 6px; }
+    .react-datepicker__day--selected:hover { background-color: #0e7490; }
+    .react-datepicker__day--today { color: #0891b2; font-weight: 700; }
+    .react-datepicker__day--today:after { display: none; }
   `;
 
   return (
     <div style={{ padding: "40px 20px", background: "#f9fafb", minHeight: "100vh" }}>
-      {/* เพิ่ม Style เพื่อตกแต่ง DatePicker Popover */}
       <style>{datePickerGlobalStyles}</style>
       <style>{`
-        input:focus {
+        input:focus, select:focus {
           border-color: #0891b2 !important;
           box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
         }
@@ -207,7 +191,6 @@ export default function BookingForm() {
           </p>
         </div>
 
-        {/* FEEDBACK */}
         {errorMsg && (
           <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: "10px", marginBottom: "18px", fontSize: "14px", fontWeight: 600 }}>
             {errorMsg}
@@ -239,7 +222,6 @@ export default function BookingForm() {
               ))}
             </select>
             <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", pointerEvents: "none" }}>
-              {/* SVG Icon สำหรับ Dropdown */}
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
@@ -247,7 +229,7 @@ export default function BookingForm() {
           </div>
         </div>
 
-        {/* ✅ DATE PICKER (ตกแต่งครบ) */}
+        {/* DATE PICKER */}
         <div style={inputWrapperStyle}>
           <label style={labelStyle}>Date</label>
           <DatePicker
@@ -256,27 +238,49 @@ export default function BookingForm() {
             dateFormat="yyyy-MM-dd"
             placeholderText="Select a date"
             minDate={new Date()}
-            customInput={<CustomDatePickerInput />} // ✅ ใช้ Custom Input ที่มี Icon
+            customInput={<CustomDatePickerInput />}
           />
         </div>
 
-        {/* TIME */}
-        <div style={inputWrapperStyle}>
-          <label style={labelStyle}>Time</label>
-          <div style={{ position: "relative" }}>
-            <input
-              type="time"
-              value={apptTime}
-              onChange={(e) => setApptTime(e.target.value)}
-              style={{ ...inputStyle, paddingLeft: "42px" }}
-            />
-            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
-              {/* SVG Icon สำหรับ Clock */}
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
+        {/* ✅ จัดกลุ่มเวลา Start & End ให้อยู่ในบรรทัดเดียวกัน */}
+        <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
+          
+          {/* START TIME */}
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>Start Time</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="time"
+                value={apptTime}
+                onChange={(e) => setApptTime(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: "42px" }}
+              />
+              <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </div>
           </div>
+
+          {/* END TIME */}
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>End Time</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="time"
+                value={apptEndTime}
+                onChange={(e) => setApptEndTime(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: "42px" }}
+              />
+              <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
         </div>
 
         {/* SUBMIT */}

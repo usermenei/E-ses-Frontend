@@ -3,24 +3,24 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getReservations, { Reservation } from "@/libs/getReservations";
-import deleteReservation from "@/libs/deleteReservation";
-import confirmReservation from "@/libs/confirmReservation"; // ✅ นำเข้าไฟล์ที่เพิ่งสร้าง
+import deleteReservation from "@/libs/deleteReservation"; // สำหรับลบถาวร
+import confirmReservation from "@/libs/confirmReservation"; 
+import updateReservationStatus from "@/libs/updateReservationStatus"; // ✅ Import ไฟล์ใหม่
 import Link from "next/link";
-
-const statusColors: Record<string, { bg: string; text: string; border: string }> = {
-  pending:   { bg: "#fef3c7", text: "#92400e", border: "#fcd34d" },
-  success:   { bg: "#f0fdf4", text: "#166534", border: "#86efac" },
-  cancelled: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5" },
-};
+import styles from "./BookingList.module.css"; 
+import ReservationCard from "./ReservationCard"; 
 
 export default function BookingList() {
   const { data: session } = useSession();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  //console.log("🔍 Session ที่หน้าเว็บได้รับ:", session?.user);
-  // ✅ เช็คว่าเป็น Admin หรือไม่ (อ้างอิงจากการดึง role ออกมาจาก session)
+  
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [spaceSearchTerm, setSpaceSearchTerm] = useState(""); 
+  const [sortBy, setSortBy] = useState("date-asc"); 
+  const [statusFilter, setStatusFilter] = useState("all"); // ✅ State ใหม่สำหรับแยก Pending, Cancelled, Success
+  
   const isAdmin = (session?.user as any)?.role === "admin";
 
   const fetchReservations = async () => {
@@ -37,26 +37,37 @@ export default function BookingList() {
 
   useEffect(() => { fetchReservations(); }, [session]);
 
-  const handleCancel = async (id: string) => {
+  // ✅ 1. ฟังก์ชัน Cancel -> แค่เปลี่ยนสถานะเป็น Cancelled
+  const handleCancelStatus = async (id: string) => {
     if (!session?.user?.token) return;
-    if (!confirm("Cancel this reservation?")) return;
+    if (!confirm("Are you sure you want to CANCEL this reservation?")) return;
     try {
-      await deleteReservation(id, session.user.token as string);
-      setReservations((prev) => prev.filter((r) => r._id !== id));
+      await updateReservationStatus(id, "cancelled", session.user.token as string);
+      setReservations((prev) => 
+        prev.map((r) => r._id === id ? { ...r, status: "cancelled" } : r)
+      );
     } catch (err: any) {
       alert(err?.message ?? "Failed to cancel.");
     }
   };
 
-  // ✅ ฟังก์ชันสำหรับ Admin กดยืนยัน
+  // ✅ 2. ฟังก์ชัน Delete -> ลบออกจาก Database ถาวร
+  const handleDelete = async (id: string) => {
+    if (!session?.user?.token) return;
+    if (!confirm("Are you sure you want to PERMANENTLY DELETE this record?")) return;
+    try {
+      await deleteReservation(id, session.user.token as string);
+      setReservations((prev) => prev.filter((r) => r._id !== id));
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to delete.");
+    }
+  };
+
   const handleApprove = async (id: string) => {
     if (!session?.user?.token) return;
     if (!confirm("Approve this reservation?")) return;
-    
     try {
       await confirmReservation(id, session.user.token as string);
-      
-      // อัปเดตสถานะใน State ทันทีโดยไม่ต้องโหลดหน้าใหม่
       setReservations((prev) => 
         prev.map((r) => r._id === id ? { ...r, status: "success" } : r)
       );
@@ -65,105 +76,126 @@ export default function BookingList() {
     }
   };
 
+  // ✅ กรองข้อมูล (เพิ่ม statusFilter เข้าไปดักจับ)
+  const filteredReservations = reservations.filter((r) => {
+    const userName = (r as any).user?.name?.toLowerCase() || "";
+    const spaceName = r.coworkingSpace?.name?.toLowerCase() || "";
+
+    const matchUser = !isAdmin || searchTerm === "" || userName.includes(searchTerm.toLowerCase());
+    const matchSpace = spaceSearchTerm === "" || spaceName.includes(spaceSearchTerm.toLowerCase());
+    const matchStatus = statusFilter === "all" || r.status === statusFilter; // เช็คสถานะ
+
+    return matchUser && matchSpace && matchStatus;
+  });
+
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
+    if (sortBy === "date-asc") {
+      return new Date(a.apptDate).getTime() - new Date(b.apptDate).getTime();
+    } else if (sortBy === "date-desc") {
+      return new Date(b.apptDate).getTime() - new Date(a.apptDate).getTime();
+    } else if (sortBy === "space-asc") {
+      const nameA = a.coworkingSpace?.name || "";
+      const nameB = b.coworkingSpace?.name || "";
+      return nameA.localeCompare(nameB);
+    } else if (sortBy === "user-asc") {
+      const userA = (a as any).user?.name || "";
+      const userB = (b as any).user?.name || "";
+      return userA.localeCompare(userB);
+    }
+    return 0;
+  });
+
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto", width: "100%" }}>
-      <h2 style={{ fontSize: "26px", fontWeight: 800, color: "#111", marginBottom: "4px", fontFamily: "'Playfair Display', serif" }}>
-        {isAdmin ? "All Reservations (Admin)" : "My Reservations"}
+    <div className={styles.container}>
+      <h2 className={styles.title}>
+        {isAdmin ? "All Reservations" : "My Reservations"}
       </h2>
-      <p style={{ fontSize: "13px", color: "#9ca3af", marginBottom: "24px" }}>
-        {reservations.length} {isAdmin ? "total" : "upcoming"} {reservations.length === 1 ? "reservation" : "reservations"}
+      <p className={styles.subtitle}>
+        {sortedReservations.length} {isAdmin ? "total" : "upcoming"} {sortedReservations.length === 1 ? "reservation" : "reservations"}
       </p>
 
+      {reservations.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+          
+          {isAdmin && (
+            <input
+              type="text"
+              placeholder="🔍 Search by user name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={styles.searchInput}
+            />
+          )}
+
+          <div className={styles.filterGrid}>
+            <input
+              type="text"
+              placeholder="🏢 Search by space name..."
+              value={spaceSearchTerm}
+              onChange={(e) => setSpaceSearchTerm(e.target.value)}
+              className={styles.searchInput}
+            />
+
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className={styles.sortSelect}
+            >
+              <option value="date-asc">📅 Date (Oldest First)</option>
+              <option value="date-desc">📅 Date (Newest First)</option>
+              <option value="space-asc">🏢 Space Name (A-Z)</option>
+              {isAdmin && <option value="user-asc">👤 User Name (A-Z)</option>}
+            </select>
+
+            {/* ✅ เพิ่ม Dropdown สำหรับกรองตาม Status (Pending, Success, Cancelled) */}
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={styles.sortSelect}
+              style={{ gridColumn: "1 / -1" }} // ให้แถวนี้ยาวเต็มบรรทัด
+            >
+              <option value="all">🟢 All Statuses</option>
+              <option value="pending">⏳ Pending Only</option>
+              <option value="success">✅ Approved (Success) Only</option>
+              <option value="cancelled">❌ Cancelled Only</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {!session && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#9ca3af" }}>
-          <p style={{ fontSize: "14px", marginBottom: "16px" }}>Sign in to view your reservations.</p>
-          <Link href="/api/auth/signin" style={{ textDecoration: "none", fontSize: "13px", fontWeight: 700, color: "#0891b2" }}>
+        <div className={styles.messageCard}>
+          <p className={styles.messageText}>Sign in to view your reservations.</p>
+          <Link href="/api/auth/signin" className={styles.signInLink}>
             Sign In →
           </Link>
         </div>
       )}
 
-      {session && loading && (
-        <p style={{ color: "#9ca3af", fontSize: "14px" }}>Loading...</p>
-      )}
+      {session && loading && <p className={styles.messageText}>Loading...</p>}
+      {session && error && <div className={styles.errorCard}>{error}</div>}
 
-      {session && error && (
-        <div style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", fontSize: "13px" }}>
-          {error}
+      {session && !loading && sortedReservations.length === 0 && !error && (
+        <div className={styles.messageCard}>
+          <div className={styles.emptyIcon}>🏢</div>
+          <p className={styles.messageText}>
+            {searchTerm || spaceSearchTerm || statusFilter !== "all" 
+              ? "No reservations found matching your criteria." 
+              : "No reservations yet."}
+          </p>
         </div>
       )}
 
-      {session && !loading && reservations.length === 0 && !error && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#9ca3af" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏢</div>
-          <p style={{ fontSize: "14px", marginBottom: "16px" }}>No reservations yet.</p>
-          <Link href="/venue" style={{ textDecoration: "none", fontSize: "13px", fontWeight: 700, color: "#0891b2" }}>
-            Browse Spaces →
-          </Link>
-        </div>
-      )}
-
-      {reservations.map((r) => {
-        const space = r.coworkingSpace;
-        const dateObj = new Date(r.apptDate);
-        const dateStr = dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-        const timeStr = dateObj.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-        const sc = statusColors[r.status] ?? statusColors.pending;
-
-        return (
-          <div key={r._id} style={{ background: "#fff", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "16px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1 }}>
-              {/* Space picture or fallback */}
-              <div style={{ width: "52px", height: "52px", borderRadius: "12px", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", flexShrink: 0, overflow: "hidden" }}>
-                {space?.picture
-                  ? <img src={space.picture} alt={space.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : "🏢"}
-              </div>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <p style={{ fontSize: "14px", fontWeight: 800, color: "#111", margin: 0 }}>
-                  {space?.name ?? "Unknown Space"}
-                </p>
-                <p style={{ fontSize: "12px", color: "#6b7280", margin: 0 }}>
-                  {space?.district}, {space?.province}
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                  <p style={{ fontSize: "12px", fontWeight: 700, color: "#0891b2", margin: 0 }}>
-                    📅 {dateStr} at {timeStr}
-                  </p>
-                  {/* Status badge */}
-                  <span style={{ fontSize: "11px", fontWeight: 700, background: sc.bg, color: sc.text, border: `1px solid ${sc.border}`, padding: "2px 8px", borderRadius: "20px" }}>
-                    {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* ส่วนของปุ่ม (Approve & Cancel) */}
-            <div style={{ display: "flex", gap: "8px" }}>
-              {/* ✅ ปุ่ม Approve จะโชว์ก็ต่อเมื่อเป็น Admin และสถานะยัง pending อยู่ */}
-              {isAdmin && r.status === "pending" && (
-                <button
-                  onClick={() => handleApprove(r._id)}
-                  style={{ fontSize: "12px", fontWeight: 700, color: "#166534", background: "#f0fdf4", border: "1px solid #86efac", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}
-                >
-                  Approve
-                </button>
-              )}
-
-              {/* ปุ่ม Cancel ซ่อนเมื่อถูกยกเลิกไปแล้ว หรือเมื่อ approve แล้วก็อาจจะยัง cancel ได้ (ตามโค้ดเดิมของคุณ) */}
-              {r.status !== "cancelled" && (
-                <button
-                  onClick={() => handleCancel(r._id)}
-                  style={{ fontSize: "12px", fontWeight: 700, color: "#dc2626", background: "#fef2f2", border: "1px solid #fecaca", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
+      {sortedReservations.map((r) => (
+        <ReservationCard
+          key={r._id}
+          reservation={r}
+          isAdmin={isAdmin}
+          onApprove={handleApprove}
+          onCancel={handleCancelStatus} // ✅ กด Cancel เรียกฟังก์ชันเปลี่ยนสถานะ
+          onDelete={handleDelete}       // ✅ กด Delete เรียกฟังก์ชันลบทิ้งถาวร
+        />
+      ))}
     </div>
   );
 }
