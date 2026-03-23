@@ -22,11 +22,9 @@ export const authOptions: AuthOptions = {
             credentials.password
           );
 
-          console.log("LOGIN RESPONSE:", res);
-
           if (!res || !res.token) return null;
 
-          // ✅ decode JWT
+          // ✅ ถอดรหัส JWT เพื่อเอา role กับ name ออกมา
           const decoded: any = jwtDecode(res.token);
 
           return {
@@ -34,7 +32,7 @@ export const authOptions: AuthOptions = {
             email: credentials.email,
             name: decoded.name || "User", 
             token: res.token, 
-            role: decoded.role || "user", // ✅ ดึง role จาก token ของ backend
+            role: decoded.role || "user", // ดึงจาก token ที่ถอดรหัสแล้ว
           };
         } catch (err) {
           console.error("Authorize error:", err);
