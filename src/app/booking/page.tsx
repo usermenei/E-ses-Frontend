@@ -1,10 +1,9 @@
-import BookingForm from "@/components/BookingForm";
+import BookingClient from "@/components/BookingClient";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/authOptions";
 
 export default async function BookingPage() {
   const session = await getServerSession(authOptions);
-
   const token = (session?.user as any)?.token;
 
   return (
@@ -26,10 +25,7 @@ export default async function BookingPage() {
       </div>
 
       <div style={{ padding: "32px 24px" }}>
-        <BookingForm
-          //userName={session?.user?.name ?? undefined} bug not fixed
-          //token={token}   // ✅ เพิ่มอันนี้
-        />
+        <BookingClient token={token} />
       </div>
     </main>
   );

@@ -10,29 +10,41 @@ import getCoworkingSpaces, {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-export default function BookingForm() {
+export default function BookingForm({
+  token: propToken,
+  initialSpace,
+}: {
+  token?: string;
+  initialSpace?: string;
+} = {}) {
   const { data: session } = useSession();
 
   const [spaces, setSpaces] = useState<CoworkingSpaceItem[]>([]);
-  const [spaceId, setSpaceId] = useState("");
+  const [spaceId, setSpaceId] = useState(initialSpace || "");
   const [apptDate, setApptDate] = useState<Date | null>(null);
-  
-  // ✅ แยก State สำหรับเวลาเริ่ม และ เวลาสิ้นสุด
+
   const [apptTime, setApptTime] = useState("09:00");
-  const [apptEndTime, setApptEndTime] = useState("10:00"); 
+  const [apptEndTime, setApptEndTime] = useState("10:00");
 
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ Sync spaceId when initialSpace prop changes (e.g. passed from URL ?spaceId=xxx)
+  useEffect(() => {
+    if (initialSpace) {
+      setSpaceId(initialSpace);
+    }
+  }, [initialSpace]);
+
   useEffect(() => {
     const fetchSpaces = async () => {
       try {
-        const token = (session?.user as any)?.token; 
+        const token = (session?.user as any)?.token ?? propToken;
         if (!token) return;
 
         const json = await getCoworkingSpaces(token);
-        setSpaces(json.data); 
+        setSpaces(json.data);
       } catch (err) {
         console.error(err);
         setErrorMsg("Failed to load spaces.");
@@ -40,10 +52,10 @@ export default function BookingForm() {
     };
 
     fetchSpaces();
-  }, [session]);
+  }, [session, propToken]);
 
   const handleSubmit = async () => {
-    const token = (session?.user as any)?.token; 
+    const token = (session?.user as any)?.token ?? propToken;
 
     if (!token) {
       setErrorMsg("You must be signed in to make a reservation.");
@@ -65,11 +77,11 @@ export default function BookingForm() {
     const dd = String(apptDate.getDate()).padStart(2, "0");
     const formattedDate = `${yyyy}-${mm}-${dd}`;
 
-    // ✅ แปลงทั้ง Start Time และ End Time ให้เป็น ISO String
     const isoDate = new Date(`${formattedDate}T${apptTime}:00`).toISOString();
-    const isoEndDate = new Date(`${formattedDate}T${apptEndTime}:00`).toISOString();
+    const isoEndDate = new Date(
+      `${formattedDate}T${apptEndTime}:00`
+    ).toISOString();
 
-    // ✅ ตรวจสอบฝั่ง Frontend ก่อนส่งไป Backend
     if (new Date(isoEndDate) <= new Date(isoDate)) {
       setErrorMsg("End time must be after start time.");
       return;
@@ -81,18 +93,18 @@ export default function BookingForm() {
     try {
       await createReservation(
         spaceId,
-        { 
-          apptDate: isoDate, 
-          apptEndDate: isoEndDate // ✅ ส่งเวลาสิ้นสุดไปด้วย
+        {
+          apptDate: isoDate,
+          apptEndDate: isoEndDate,
         },
-        token 
+        token
       );
 
       setSuccess(true);
-      setSpaceId("");
+      setSpaceId(initialSpace || "");
       setApptDate(null);
       setApptTime("09:00");
-      setApptEndTime("10:00"); // รีเซ็ต
+      setApptEndTime("10:00");
 
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
@@ -102,7 +114,6 @@ export default function BookingForm() {
     }
   };
 
-  // Styles
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: "11px",
@@ -137,25 +148,47 @@ export default function BookingForm() {
     background: "#fff",
     padding: "36px",
     borderRadius: "24px",
-    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+    boxShadow:
+      "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
   };
 
-  const CustomDatePickerInput = forwardRef(({ value, onClick, ...props }: any, ref: any) => (
-    <div style={{ position: "relative" }}>
-      <input
-        {...props}
-        value={value}
-        onClick={onClick}
-        ref={ref}
-        style={{ ...inputStyle, paddingLeft: "42px" }}
-      />
-      <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: "20px", height: "20px" }}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zM14.25 15h.008v.008H14.25V15zm0 2.25h.008v.008H14.25v-.008zM16.5 15h.008v.008H16.5V15zm0 2.25h.008v.008H16.5v-.008z" />
-        </svg>
-      </span>
-    </div>
-  ));
+  const CustomDatePickerInput = forwardRef(
+    ({ value, onClick, ...props }: any, ref: any) => (
+      <div style={{ position: "relative" }}>
+        <input
+          {...props}
+          value={value}
+          onClick={onClick}
+          ref={ref}
+          style={{ ...inputStyle, paddingLeft: "42px" }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            left: "12px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#6b7280",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            style={{ width: "20px", height: "20px" }}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zM14.25 15h.008v.008H14.25V15zm0 2.25h.008v.008H14.25v-.008zM16.5 15h.008v.008H16.5V15zm0 2.25h.008v.008H16.5v-.008z"
+            />
+          </svg>
+        </span>
+      </div>
+    )
+  );
 
   CustomDatePickerInput.displayName = "CustomDatePickerInput";
 
@@ -242,10 +275,8 @@ export default function BookingForm() {
           />
         </div>
 
-        {/* ✅ จัดกลุ่มเวลา Start & End ให้อยู่ในบรรทัดเดียวกัน */}
+        {/* START & END TIME */}
         <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
-          
-          {/* START TIME */}
           <div style={{ flex: 1 }}>
             <label style={labelStyle}>Start Time</label>
             <div style={{ position: "relative" }}>
@@ -263,7 +294,6 @@ export default function BookingForm() {
             </div>
           </div>
 
-          {/* END TIME */}
           <div style={{ flex: 1 }}>
             <label style={labelStyle}>End Time</label>
             <div style={{ position: "relative" }}>
@@ -280,7 +310,6 @@ export default function BookingForm() {
               </span>
             </div>
           </div>
-
         </div>
 
         {/* SUBMIT */}

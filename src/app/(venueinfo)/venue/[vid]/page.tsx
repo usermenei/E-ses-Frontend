@@ -34,7 +34,6 @@ export default async function VenueDetailPage({
                 alt={v.caption ?? v.name} 
                 fill 
                 style={{ objectFit: "cover" }} 
-                // unoptimized // 👈 เติมคำนี้ลงไปครับ บังคับไม่ให้ Next.js เอาไปบีบอัดจนพัง
               />
             </div>
           ) : (
@@ -67,8 +66,9 @@ export default async function VenueDetailPage({
               </div>
             ))}
 
+            {/* ✅ Pass spaceId so booking form pre-selects this space */}
             <Link
-              href="/booking"
+              href={`/booking?spaceId=${vid}`}
               style={{ textDecoration: "none", display: "block", width: "100%", textAlign: "center", background: "#0891b2", color: "#fff", fontWeight: 800, fontSize: "14px", padding: "13px", borderRadius: "12px", marginTop: "20px", letterSpacing: "0.5px" }}
             >
               Reserve This Space

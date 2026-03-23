@@ -163,19 +163,18 @@ export default function VenueCatalog({
               </p>
 
               <Link
-                href="/booking"
-                style={{
-                  display: "block",
-                  textAlign: "center",
-                  background: "#0891b2",
-                  color: "#fff",
-                  fontSize: "12px",
-                  fontWeight: 800,
-                  padding: "10px",
-                  borderRadius: "10px",
-                  marginTop: "10px",
-                }}
-              >
+              href={`/booking?spaceId=${v._id}`}  // ✅ pass space ID
+              style={{
+              display: "block",
+              textAlign: "center",
+              background: "#0891b2",
+              color: "#fff",
+              fontSize: "12px",
+              fontWeight: 800,
+              padding: "10px",
+              borderRadius: "10px",
+              marginTop: "10px",
+                  }}>
                 Reserve This Space
               </Link>
             </div>
