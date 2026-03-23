@@ -29,7 +29,13 @@ export default async function VenueDetailPage({
           {/* Picture — real if available, gradient fallback */}
           {v.picture ? (
             <div style={{ position: "relative", width: "100%", height: "220px" }}>
-              <Image src={v.picture} alt={v.caption ?? v.name} fill style={{ objectFit: "cover" }} />
+              <Image 
+                src={v.picture} 
+                alt={v.caption ?? v.name} 
+                fill 
+                style={{ objectFit: "cover" }} 
+                // unoptimized // 👈 เติมคำนี้ลงไปครับ บังคับไม่ให้ Next.js เอาไปบีบอัดจนพัง
+              />
             </div>
           ) : (
             <div style={{ height: "160px", background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "56px" }}>

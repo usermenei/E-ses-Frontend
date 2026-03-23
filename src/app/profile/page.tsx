@@ -91,13 +91,13 @@ export default async function ProfilePage() {
           ))}
         </div>
         
-        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+        {/* <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
           {["Edit Avatar", "Edit Profile"].map((label) => (
             <button key={label} style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.3)", padding: "7px 16px", borderRadius: "20px", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}>
               {label}
             </button>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* Details */}

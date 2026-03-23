@@ -1,4 +1,4 @@
-const BASE = "http://localhost:5000/api/v1";
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export interface CoworkingSpaceDetail {
   _id: string;
@@ -23,11 +23,15 @@ export interface CoworkingSpaceDetailJson {
 }
 
 export default async function getCoworkingSpace(id: string): Promise<CoworkingSpaceDetailJson> {
-  const response = await fetch(`${BASE}/coworkingspace/${id}`, {
+  // ✅ แก้ตรงนี้: เปลี่ยนจาก /coworkingspace/ เป็น /coworkingspaces/
+  const response = await fetch(`${BASE}/coworkingspaces/${id}`, {
     cache: "no-store",
   });
 
   if (!response.ok) {
+    // แอบใส่ log ไว้ดูเล่นเผื่อพังอีก
+    const errorBody = await response.text();
+    console.error("Error from Backend:", response.status, errorBody);
     throw new Error("Failed to fetch coworking space");
   }
 

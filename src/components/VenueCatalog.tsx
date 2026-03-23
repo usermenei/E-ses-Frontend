@@ -75,6 +75,7 @@ export default function VenueCatalog({
                     alt={v.caption ?? v.name}
                     fill
                     style={{ objectFit: "cover" }}
+                    // unoptimized // 👈 เติมคำนี้ลงไปตรงนี้เลยครับ!
                   />
                   <div
                     style={{
