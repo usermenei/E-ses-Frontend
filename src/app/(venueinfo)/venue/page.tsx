@@ -2,19 +2,18 @@ import getCoworkingSpaces from "@/libs/getCoworkingSpaces";
 import VenueCatalog from "@/components/VenueCatalog";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/authOptions";
-import Link from "next/link"; // ✅ อย่าลืม Import Link
+import Link from "next/link"; 
 
 export default async function VenuePage() {
   const session = await getServerSession(authOptions);
   const token = (session?.user as any)?.token;
-  const role = (session?.user as any)?.role; // ✅ ดึง role ออกมาเช็ค
+  const role = (session?.user as any)?.role; // ดึง role ออกมาเช็ค
 
   let spaces = null;
 
   try {
-    if (token) {
-      spaces = await getCoworkingSpaces(token);
-    }
+    // ✅ 1. เอาเงื่อนไข if (token) ออก เพื่อให้ดึงข้อมูลได้แม้ไม่ได้ล็อกอิน
+    spaces = await getCoworkingSpaces(token);
   } catch (err) {
     console.error("Failed to fetch spaces:", err);
   }
@@ -28,7 +27,7 @@ export default async function VenuePage() {
           padding: "40px 24px",
           textAlign: "center",
           color: "#fff",
-          position: "relative", // ✅ เพิ่ม position สำหรับจัดวางปุ่ม
+          position: "relative",
         }}
       >
         <h1
@@ -45,7 +44,7 @@ export default async function VenuePage() {
           Choose a space that fits your work style
         </p>
 
-        {/* ✅ ปุ่มสร้าง Space (เห็นเฉพาะ Admin) */}
+        {/* ปุ่มสร้าง Space (เห็นเฉพาะ Admin) */}
         {role === "admin" && (
           <div style={{ marginTop: "20px" }}>
             <Link
@@ -69,11 +68,8 @@ export default async function VenuePage() {
 
       {/* CONTENT */}
       <div style={{ padding: "24px" }}>
-        {!token ? (
-          <p>Please login to view spaces</p>
-        ) : (
-          <VenueCatalog spacesJson={spaces} />
-        )}
+        {/* ✅ 2. เอาเช็ค {!token} ออก แล้วให้แสดง VenueCatalog ทันที */}
+        <VenueCatalog spacesJson={spaces} />
       </div>
     </main>
   );

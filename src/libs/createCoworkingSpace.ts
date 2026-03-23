@@ -1,4 +1,4 @@
-const BASE = "http://localhost:5000/api/v1"; // เปลี่ยนให้ตรงกับ Backend ของคุณ
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export default async function createCoworkingSpace(token: string, spaceData: any) {
     const response = await fetch(`${BASE}/coworkingspaces`, {

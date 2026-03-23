@@ -1,4 +1,4 @@
-const BASE = "http://localhost:5000/api/v1"; // เปลี่ยน URL ให้ตรงกับ Backend ของคุณนะครับ
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export default async function confirmReservation(id: string, token: string) {
   // 💡 หมายเหตุ: ตรวจสอบ URL path ให้ตรงกับที่กำหนดไว้ใน Router ฝั่ง Backend ของคุณ
