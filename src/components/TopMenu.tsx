@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/authOptions";
+import SignOutButton from "./SignOutButton";
 
 export default async function TopMenu() {
   const session = await getServerSession(authOptions);
@@ -87,9 +88,9 @@ export default async function TopMenu() {
         </Link>
 
         <div className="topmenu-navlinks">
-          <Link href="/workspace"      className="topmenu-navlink">Spaces</Link>
-          <Link href="/booking"    className="topmenu-navlink">Booking</Link>
-          <Link href="/mybooking"  className="topmenu-navlink">My Booking</Link>
+          <Link href="/workspace" className="topmenu-navlink">Spaces</Link>
+          <Link href="/booking" className="topmenu-navlink">Booking</Link>
+          <Link href="/mybooking" className="topmenu-navlink">My Booking</Link>
         </div>
 
         <div className="topmenu-right">
@@ -101,9 +102,9 @@ export default async function TopMenu() {
                 </div>
                 <span className="topmenu-username">{session.user?.name}</span>
               </Link>
-              <Link href="/api/auth/signout" className="topmenu-signout">
-                Sign out
-              </Link>
+              
+              {/* ✅ แทนที่ Link เดิมด้วย SignOutButton */}
+              <SignOutButton />
             </>
           ) : (
             <Link href="/api/auth/signin" className="topmenu-signin">
