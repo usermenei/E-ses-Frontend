@@ -17,9 +17,9 @@ export default function SignOutButton() {
           cursor: "pointer",
           fontFamily: "inherit",
           padding: 0,
-          color: "#9ca3af",    /* ⭐️ เพิ่มสีเทาตรงนี้ */
-          fontSize: "15px",    /* ⭐️ เพิ่มขนาดฟอนต์ตรงนี้ */
-          fontWeight: "normal" /* ⭐️ กำหนดน้ำหนักตัวอักษร */
+          color: "#9ca3af",    
+          fontSize: "15px",    
+          fontWeight: "normal" 
         }}
       >
         Sign out
