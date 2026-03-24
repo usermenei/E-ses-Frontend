@@ -5,7 +5,7 @@ import BookingForm from "./BookingForm";
 
 export default function BookingClient({ token }: { token?: string }) {
   const searchParams = useSearchParams();
-  const space = searchParams.get("spaceId"); // ✅ matches ?spaceId=xxx from VenueCatalog
+  const space = searchParams.get("spaceId"); // ✅ matches ?spaceId=xxx from WorkspaceCatalog
 
   return (
     <BookingForm

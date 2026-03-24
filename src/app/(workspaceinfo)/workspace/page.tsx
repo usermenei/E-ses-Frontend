@@ -1,5 +1,5 @@
 import getCoworkingSpaces from "@/libs/getCoworkingSpaces";
-import VenueCatalog from "@/components/VenueCatalog";
+import WorkspaceCatalog from "@/components/WorkspaceCatalog";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/authOptions";
 import Link from "next/link"; 
@@ -48,7 +48,7 @@ export default async function VenuePage() {
         {role === "admin" && (
           <div style={{ marginTop: "20px" }}>
             <Link
-              href="/venue/create"
+              href="/workspace/create"
               style={{
                 background: "#fff",
                 color: "#0891b2",
@@ -68,8 +68,8 @@ export default async function VenuePage() {
 
       {/* CONTENT */}
       <div style={{ padding: "24px" }}>
-        {/* ✅ 2. เอาเช็ค {!token} ออก แล้วให้แสดง VenueCatalog ทันที */}
-        <VenueCatalog spacesJson={spaces} />
+        {/* ✅ 2. เอาเช็ค {!token} ออก แล้วให้แสดง WorkspaceCatalog ทันที */}
+        <WorkspaceCatalog spacesJson={spaces} />
       </div>
     </main>
   );

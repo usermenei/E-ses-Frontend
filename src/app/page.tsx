@@ -40,7 +40,7 @@ export default function Home() {
             tag: fallbackTags[i % fallbackTags.length],
             name: space.name,
             desc: space.caption || `Located in ${space.district}, ${space.province}. Perfect for deep focus and creative teams.`,
-            href: `/venue/${space._id}`,
+            href: `/workspace/${space._id}`,
             picture: space.picture, // ✅ มีรูปเหมือนเดิม
           }));
           setSpaces(formattedSpaces);

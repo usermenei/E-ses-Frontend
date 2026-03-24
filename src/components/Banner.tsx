@@ -130,7 +130,7 @@ export default function Banner() {
         </p>
         <button
           style={{ background: "#fff", color: "#0891b2", border: "none", padding: "11px 28px", borderRadius: "24px", fontSize: "13px", fontWeight: 800, cursor: "pointer", letterSpacing: "0.5px", boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}
-          onClick={(e) => { e.stopPropagation(); router.push(`/venue/${slide.id}`); }}
+          onClick={(e) => { e.stopPropagation(); router.push(`/workspace/${slide.id}`); }}
         >
           Explore Spaces
         </button>

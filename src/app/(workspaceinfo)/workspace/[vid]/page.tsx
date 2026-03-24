@@ -14,7 +14,7 @@ export default async function VenueDetailPage({
   return (
     <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
       <div style={{ background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)", padding: "40px 24px", textAlign: "center", color: "#fff", position: "relative" }}>
-        <Link href="/venue" style={{ textDecoration: "none", position: "absolute", left: "20px", top: "20px", fontSize: "13px", color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
+        <Link href="/workspace" style={{ textDecoration: "none", position: "absolute", left: "20px", top: "20px", fontSize: "13px", color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>
           ← Back
         </Link>
         <h1 style={{ fontSize: "30px", fontWeight: 800, marginBottom: "6px", fontFamily: "'Playfair Display', serif" }}>

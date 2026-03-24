@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 // matching all API routes
-                source: "/venue/:path*",
+                source: "/workspace/:path*",
                 headers: [
                     { key: "Access-Control-Allow-Credentials", value: "true" },
                     { key: "Access-Control-Allow-Origin", value: "*" }, // replace this your actual origin

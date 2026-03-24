@@ -87,7 +87,7 @@ export default async function TopMenu() {
         </Link>
 
         <div className="topmenu-navlinks">
-          <Link href="/venue"      className="topmenu-navlink">Spaces</Link>
+          <Link href="/workspace"      className="topmenu-navlink">Spaces</Link>
           <Link href="/booking"    className="topmenu-navlink">Booking</Link>
           <Link href="/mybooking"  className="topmenu-navlink">My Booking</Link>
         </div>

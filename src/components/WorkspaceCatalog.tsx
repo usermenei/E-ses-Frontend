@@ -58,7 +58,7 @@ export default function WorkspaceCatalog({
             }}
           >
             <Link
-              href={`/venue/${v._id}`}
+              href={`/workspace/${v._id}`}
               style={{ textDecoration: "none", display: "block" }}
             >
               {/* IMAGE */}

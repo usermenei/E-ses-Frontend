@@ -13,7 +13,7 @@ export default function Card({ venueName, imgSrc, ratingValue, onRatingChange }:
         <InteractiveCard contentName={venueName}>
             <div className='w-full h-[60%] relative rounded-t-lg'>
                 <Image src={imgSrc}
-                    alt='Venue Picture'
+                    alt='Workspace Picture'
                     fill={true}
                     className='object-cover rounded-t-lg'
                 />

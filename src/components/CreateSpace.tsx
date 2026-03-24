@@ -51,7 +51,7 @@ export default function CreateSpace() {
         try {
         await createCoworkingSpace(token, formData);
         alert("Coworking Space created successfully! 🎉");
-        router.push("/venue");
+        router.push("/workspace");
         router.refresh();
         } catch (err: any) {
         setError(err.message);
@@ -190,7 +190,7 @@ export default function CreateSpace() {
             {/* Action Buttons */}
             <div style={{ display: "flex", gap: "12px", marginTop: "32px" }}>
                 <Link
-                href="/venue"
+                href="/workspace"
                 style={{
                     flex: 1,
                     textAlign: "center",
