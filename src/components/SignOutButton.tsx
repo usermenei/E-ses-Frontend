@@ -10,13 +10,16 @@ export default function SignOutButton() {
     <>
       <button
         onClick={() => setShowConfirm(true)}
-        className="topmenu-signout"
+        // เอา className="topmenu-signout" ออกไปได้เลยครับ
         style={{
           background: "none",
           border: "none",
           cursor: "pointer",
           fontFamily: "inherit",
           padding: 0,
+          color: "#9ca3af",    /* ⭐️ เพิ่มสีเทาตรงนี้ */
+          fontSize: "15px",    /* ⭐️ เพิ่มขนาดฟอนต์ตรงนี้ */
+          fontWeight: "normal" /* ⭐️ กำหนดน้ำหนักตัวอักษร */
         }}
       >
         Sign out
