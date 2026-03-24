@@ -1,7 +1,20 @@
 "use client";
 
 import { Reservation } from "@/libs/getReservations";
+import Image from "next/image"; // ✅ 1. Import Image จาก Next.js
 import styles from "./BookingList.module.css";
+
+// ฟังก์ชันแปลงลิงก์ Google Drive
+const formatImageUrl = (url: string | undefined) => {
+  if (!url) return "";
+  if (url.includes("drive.google.com/file/d/")) {
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    }
+  }
+  return url; 
+};
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -43,11 +56,24 @@ export default function ReservationCard({
     }
   };
 
+  const validImageUrl = formatImageUrl(space?.picture);
+
   return (
     <div className={styles.reservationCard}>
       <div className={styles.cardLeft}>
         <div className={styles.imageContainer}>
-          {space?.picture ? <img src={space.picture} alt={space.name} className={styles.image} /> : "🏢"}
+          {/* ✅ 2. เปลี่ยนมาใช้ <Image> ของ Next.js */}
+          {validImageUrl ? (
+            <Image 
+              src={validImageUrl} 
+              alt={space?.name ?? "Space"} 
+              width={120} // กำหนดความกว้าง (ปรับตัวเลขได้ตามต้องการ)
+              height={120} // กำหนดความสูง
+              className={styles.image} 
+            />
+          ) : (
+            "🏢"
+          )}
         </div>
 
         <div className={styles.infoContainer}>
@@ -65,24 +91,20 @@ export default function ReservationCard({
       </div>
 
       <div className={styles.actionsContainer}>
-        {/* ปุ่ม Edit โชว์ให้ Admin หรือ User เฉพาะสถานะ pending */}
         {(isAdmin || r.status === "pending") && (
           <button onClick={() => onEdit(r)} className={styles.btnEdit}>Edit</button>
         )}
 
-        {/* ปุ่ม Approve โชว์เฉพาะ Admin และสถานะต้อง pending */}
         {isAdmin && r.status === "pending" && (
           <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>Approve</button>
         )}
 
-        {/* ✅ แก้แล้ว: ปุ่ม Cancel โชว์เฉพาะตอน pending เท่านั้น */}
         {r.status === "pending" && (
           <button onClick={() => onCancel(r._id)} className={styles.btnCancel}>Cancel</button>
         )}
 
-        {/* ✅ แก้แล้ว: ปุ่ม Delete โชว์ให้ Admin, หรือคิวที่ cancelled แล้ว, หรือคิวที่ success แล้ว */}
         {(isAdmin || r.status === "cancelled" || r.status === "success") && (
-           <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>Delete</button>
+            <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>Delete</button>
         )}
       </div>
     </div>

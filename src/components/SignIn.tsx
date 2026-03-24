@@ -89,7 +89,7 @@ export default function SignIn() {
             <input
               type="email"
               required
-              placeholder="admin@example.com"
+              placeholder="yourgmail@example.com"
               style={inputStyle}
               onChange={(e) => setEmail(e.target.value)}
             />
