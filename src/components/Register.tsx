@@ -6,6 +6,8 @@ import Link from "next/link";
 
 export default function Register() {
     const router = useRouter();
+
+    const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
     
     const [formData, setFormData] = useState({
         name: "",
@@ -53,7 +55,7 @@ export default function Register() {
         setLoading(true);
 
         try {
-        const res = await fetch("http://localhost:5000/api/v1/auth/register", {
+        const res = await fetch(`${BASE}/auth/register`, {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
